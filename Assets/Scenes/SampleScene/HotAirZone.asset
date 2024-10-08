@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
-  m_Name: Main Camera Profile
+  m_Name: HotAirZone
   m_EditorClassIdentifier: 
   components:
-  - {fileID: 1158135142443966927}
---- !u!114 &1158135142443966927
+  - {fileID: 8541196629232657304}
+--- !u!114 &8541196629232657304
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -31,20 +31,20 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   threshold:
-    m_OverrideState: 1
-    m_Value: 1
+    m_OverrideState: 0
+    m_Value: 1.02
   intensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2.26
   scatter:
-    m_OverrideState: 0
-    m_Value: 0.76
+    m_OverrideState: 1
+    m_Value: 1
   clamp:
     m_OverrideState: 0
     m_Value: 65472
   tint:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 1, g: 0.36752138, b: 0, a: 1}
   highQualityFiltering:
     m_OverrideState: 0
     m_Value: 0

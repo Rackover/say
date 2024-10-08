@@ -29,7 +29,7 @@ Material:
     - _AtmosphereThickness: 1
     - _BottomMultiplier: 1
     - _Exposure: 1.71
-    - _Offset: -0.2
+    - _Offset: -0.15
     - _Screenspace: 0
     - _SkyExponent1: 0
     - _SkyExponent2: 1

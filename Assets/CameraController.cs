@@ -70,13 +70,30 @@ public class CameraController : MonoBehaviour
 
         Vector3 targetPosition = optimalLocalPosition + target.position;
 
+#if false
+
+        Vector3 currentVelocity = Vector3.zero;
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref currentVelocity, lerp);
+
+        Quaternion targetRotation = Quaternion.LookRotation((target.position - transform.position) + Vector3.up * targetHeight);
+
+        float delta = Quaternion.Angle(transform.rotation, targetRotation);
+        if (delta > 0f)
+        {
+            float smoothTime = 0f;
+            float t = Mathf.SmoothDampAngle(delta, 0.0f, ref smoothTime, rotationLerp);
+            t = 1.0f - (t / delta);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, t);
+        }
+#else
         transform.position = Vector3.Lerp(transform.position, targetPosition, lerp);
 
         Quaternion targetRotation = Quaternion.LookRotation((target.position - transform.position) + Vector3.up * targetHeight);
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationLerp);
+#endif
     }
 
-    private void LateUpdate()
+    private void FixedUpdate()
     {
         if (Gamepad.current != null)
         {

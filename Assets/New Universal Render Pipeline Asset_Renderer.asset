@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   injectionPoint: 550
-  downSample: 2.73
+  downSample: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87,7 +87,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     passTag: DistortionRenderObjects
-    Event: 450
+    Event: 550
     filterSettings:
       RenderQueueType: 1
       LayerMask:
@@ -99,7 +99,7 @@ MonoBehaviour:
     overrideShader: {fileID: -6465566751694194690, guid: c2097c3b237c54862b49fca7bf14b909, type: 3}
     overrideShaderPassIndex: 0
     overrideMode: 1
-    overrideDepthState: 1
+    overrideDepthState: 0
     depthCompareFunction: 4
     enableWrite: 1
     stencilSettings:

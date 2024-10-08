@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
     private const int LEFT = 0;
     private const int RIGHT = 1;
 
+    public static PlayerController i;
+
     [SerializeField]
     private Transform cameraTransform;
 
@@ -88,6 +90,9 @@ public class PlayerController : MonoBehaviour
     private float energyDepletionPerSecond = 1f;
 
     [SerializeField]
+    private float energyRegainWhenWindyPerSecond = 0.5f;
+
+    [SerializeField]
     private ParticleSystem pSystem;
 
     [SerializeField]
@@ -104,6 +109,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private LandingSpotLogic landing;
+
+    [SerializeField]
+    private WindReceiver winds;
 
     [SerializeField]
     private TrailRenderer[] trails = new TrailRenderer[2];
@@ -148,6 +156,14 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        if (i)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+
+        i = this;
+
         Restart();
     }
 
@@ -167,8 +183,15 @@ public class PlayerController : MonoBehaviour
         DashForward();
     }
 
+    private void Update()
+    {
+        ReadInputs();
+        UpdateLandingSequence();
+        UpdateTakeOffSequence();
+    }
 
-    void Update()
+
+    void FixedUpdate()
     {
         //
         if (Keyboard.current.rKey.wasPressedThisFrame)
@@ -176,10 +199,6 @@ public class PlayerController : MonoBehaviour
             Restart();
         }
         //
-
-        ReadInputs();
-        UpdateLandingSequence();
-        UpdateTakeOffSequence();
 
         if (isLanded)
         {
@@ -192,14 +211,16 @@ public class PlayerController : MonoBehaviour
 
             ComputeDash();
             ComputeCoasting();
+            ComputeWinds();
             ComputeGravity();
 
             ComputeFriction();
 
+
             ApplyDash();
             ApplyMovement();
 
-            DepleteEnergy();
+            UpdateEnergy();
             DepleteStamina();
         }
 
@@ -298,9 +319,23 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void DepleteEnergy()
+    void UpdateEnergy()
     {
-        energy = Mathf.Max(0f, energy - energyDepletionPerSecond * Time.deltaTime * (isFalling ? 30f : 1f));
+        float multiplier = 1f;
+
+        if (isFalling)
+        {
+            multiplier = 30f;
+        }
+
+        if (winds.CombinedPush.y > 0f)
+        {
+            energy += winds.CombinedPush.y * Time.deltaTime * energyRegainWhenWindyPerSecond;
+        }
+        else
+        {
+            energy = Mathf.Max(0f, energy - energyDepletionPerSecond * Time.deltaTime * multiplier);
+        }
 
         if ((energy <= 0f || (energy <= criticalMinimumEnergy && stamina01 <= 0f)) && InFlight)
         {
@@ -533,6 +568,11 @@ public class PlayerController : MonoBehaviour
                 tiltTarget = 0f;
             }
         }
+    }
+
+    private void ComputeWinds()
+    {
+        movementVector += winds.CombinedPush * Time.deltaTime;
     }
 
     void ComputeCoasting()

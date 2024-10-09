@@ -566,7 +566,7 @@ public class PlayerController : MonoBehaviour
                 if (winds.ShouldCorrect)
                 {
                     Vector3 fwdRequested = winds.ForwardRequiredToStayWithin;
-                    if (Vector3.SignedAngle(flatFwd, fwdRequested, Vector3.up) > 0f)
+                    if (Mathf.Sign(Vector3.SignedAngle(transform.forward, fwdRequested, Vector3.up)) != Mathf.Sign(angle))
                     {
                         flatFwd = Vector3.Lerp(flatFwd, fwdRequested, windAimAssistAmount);
                         Debug.DrawRay(transform.position, flatFwd * 100f, Color.magenta);

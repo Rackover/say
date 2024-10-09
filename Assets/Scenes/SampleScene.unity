@@ -6937,6 +6937,7 @@ MonoBehaviour:
   staminaDepletionPerSecond: 0.002
   energyDepletionPerSecond: 2
   energyRegainWhenWindyPerSecond: 0.17
+  loweringDownEnergy: 10
   windAimAssistAmount: 1
   letters: {fileID: 671429490}
   pSystem: {fileID: 345235798}
@@ -7553,9 +7554,10 @@ MonoBehaviour:
   childCamera: {fileID: 963194227}
   angleRotationSpeed: 180
   cameraOptimalDistance: 7
+  horizontalAmplitude: 0
   rotationLerpSpeed: 100
-  cameraOverhead: -0.8
-  cameraHeight: 2.6
+  cameraOverhead: 1.2
+  cameraHeight: 2
   verticalLookLerpSpeed: 4
   lerpSpeed: 7
   maxAngleDifference: 40

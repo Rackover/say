@@ -24,8 +24,6 @@ public class LandingSpotLogic : MonoBehaviour
 
     private void Update()
     {
-        Debug.DrawRay(referenceTransform.position, referenceTransform.forward * maxDistance, Color.red);
-
         if (Physics.SphereCast(referenceTransform.position, detectionRadius, referenceTransform.forward, out RaycastHit hit, maxDistance, LayerMask.GetMask("LandingSpot")))
         {
             if (hit.collider)

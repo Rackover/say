@@ -41,11 +41,16 @@ public class CameraController : MonoBehaviour
     private float verticalLookMaxAmplitde = 0.7f;
 
     [SerializeField]
+    private bool allowLookingUp = false;
+
+    [SerializeField]
     private bool invertVerticalLook = false;
 
     [Header("ReadOnly")]
     [SerializeField]
     private float desiredAngle;
+
+    public float LookDownAmount { get; private set; }
 
     private void Awake()
     {
@@ -127,10 +132,19 @@ public class CameraController : MonoBehaviour
 
             yInput = Mathf.Sign(yInput) * Mathf.Pow(Mathf.Abs(yInput), 3);
 
+            LookDownAmount = Mathf.Abs(Mathf.Min(0f, yInput));
+
+            float targetLookAngle = (invertVerticalLook ? -1f : 1f) * yInput * verticalLookMaxAmplitde;
+
+            if (!allowLookingUp)
+            {
+                targetLookAngle = Mathf.Min(0f, targetLookAngle);
+            }
+
             Quaternion childLookRot = Quaternion.LookRotation(
                 new Vector3(
                     0f, 
-                    (invertVerticalLook ? -1f : 1f) * yInput * verticalLookMaxAmplitde, 
+                    targetLookAngle, 
                     1f - verticalLookMaxAmplitde * Mathf.Abs(yInput)
                 )
             );

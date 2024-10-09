@@ -93,6 +93,16 @@ public class PlayerController : MonoBehaviour
     private float energyRegainWhenWindyPerSecond = 0.5f;
 
     [SerializeField]
+    private float loweringDownEnergy = 10f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float windAimAssistAmount = 1f;
+
+    [SerializeField]
+    private ParticleSystem letters;
+
+    [SerializeField]
     private ParticleSystem pSystem;
 
     [SerializeField]
@@ -112,6 +122,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField]
     private WindReceiver winds;
+
+    [SerializeField]
+    private CameraController cameraControl;
 
     [SerializeField]
     private TrailRenderer[] trails = new TrailRenderer[2];
@@ -136,6 +149,7 @@ public class PlayerController : MonoBehaviour
     private float tiltAmount;
 
 
+
     private bool IsDashingForward => lastForwardDashAt > Time.time - forwardDashDuration;
     private bool[] IsDashing => new bool[] { lastSideRollAt[LEFT] > Time.time - sideRollDuration, lastSideRollAt[RIGHT] > Time.time - sideRollDuration };
 
@@ -149,6 +163,7 @@ public class PlayerController : MonoBehaviour
 
     private bool wantsToLand = false;
     private bool wantsToTakeOff = false;
+    private bool isFlyingDown = false;
 
     private bool isLandingOrDeparting = false;
     private bool isLanded = false;
@@ -169,6 +184,9 @@ public class PlayerController : MonoBehaviour
 
     void Restart()
     {
+        letters.Clear();
+        letters.Stop();
+
         energy = baseCoastingEnergy;
         stamina01 = 1f;
         isFalling = false;
@@ -299,7 +317,7 @@ public class PlayerController : MonoBehaviour
         {
             float completion01 = (Time.time - time) / landingDurationSeconds;
             transform.position = Vector3.Lerp(initialPosition, target, completion01);
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
         isLanded = true;
@@ -339,6 +357,9 @@ public class PlayerController : MonoBehaviour
 
         if ((energy <= 0f || (energy <= criticalMinimumEnergy && stamina01 <= 0f)) && InFlight)
         {
+            letters.Clear();
+            letters.Play();
+
             isFalling = true;
             animator.SetTrigger("OnFall");
         }
@@ -348,7 +369,7 @@ public class PlayerController : MonoBehaviour
     {
         if (InFlight)
         {
-            lookAtBone.forward = cameraTransform.forward;
+            lookAtBone.forward = Vector3.RotateTowards(lookAtBone.forward, cameraTransform.forward, 30f * Mathf.Deg2Rad, 1f);
         }
         else
         {
@@ -402,17 +423,14 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
-                    if (stamina01 <= 0F)
-                    {
-                        return;
-                    }
+                    bool hasStamina = stamina01 > 0f;
 
-                    bool dashesRight = Gamepad.current.rightTrigger.wasPressedThisFrame && !IsDashing[RIGHT];
-                    bool dashesLeft = Gamepad.current.leftTrigger.wasPressedThisFrame && !IsDashing[LEFT];
+                    bool dashesRight = Gamepad.current.rightTrigger.wasPressedThisFrame && !IsDashing[RIGHT] && hasStamina;
+                    bool dashesLeft = Gamepad.current.leftTrigger.wasPressedThisFrame && !IsDashing[LEFT] && hasStamina;
 
                     float cost = costOfDash;
 
-                    bool dashForward = dashesRight && dashesLeft;
+                    bool dashForward = dashesRight && dashesLeft && hasStamina;
 
                     if (dashesRight && IsDashing[LEFT]
                         || dashesLeft && IsDashing[RIGHT]
@@ -440,6 +458,10 @@ public class PlayerController : MonoBehaviour
                             DashSide(LEFT);
                             cost = costOfRoll;
                             stamina01 = Mathf.Clamp01(stamina01 - cost);
+                        }
+                        else
+                        {
+                            isFlyingDown = cameraControl.LookDownAmount > 0.3f;
                         }
                     }
                 }
@@ -521,9 +543,10 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            Vector3 flatFwd = cameraTransform.forward;
-            flatFwd.y = 0f;
+            Vector3 flatFwd = cameraTransform.forward.WithoutY();
             flatFwd.Normalize();
+
+            Debug.DrawRay(transform.position, flatFwd * 100f, Color.green);
 
             float angle = Vector3.SignedAngle(transform.forward, flatFwd, Vector3.up);
 
@@ -539,6 +562,16 @@ public class PlayerController : MonoBehaviour
             if (isCorrectingAngle)
             {
                 float angleAmount = Mathf.Clamp01(Mathf.Abs(angle) / cameraWakeUpAngle);
+
+                if (winds.ShouldCorrect)
+                {
+                    Vector3 fwdRequested = winds.ForwardRequiredToStayWithin;
+                    if (Vector3.SignedAngle(flatFwd, fwdRequested, Vector3.up) > 0f)
+                    {
+                        flatFwd = Vector3.Lerp(flatFwd, fwdRequested, windAimAssistAmount);
+                        Debug.DrawRay(transform.position, flatFwd * 100f, Color.magenta);
+                    }
+                }
 
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
@@ -556,6 +589,8 @@ public class PlayerController : MonoBehaviour
 
                 animator.SetBool("GoingRight", rightIsOn);
                 animator.SetBool("GoingLeft", leftIsOn);
+
+                isFlyingDown = false;
             }
             else
             {
@@ -567,6 +602,8 @@ public class PlayerController : MonoBehaviour
 
                 tiltTarget = 0f;
             }
+
+            animator.SetBool("GoingDown", isFlyingDown);
         }
     }
 
@@ -577,7 +614,21 @@ public class PlayerController : MonoBehaviour
 
     void ComputeCoasting()
     {
-        movementVector += energy * transform.forward * Time.deltaTime;
+        float amount = cameraControl.LookDownAmount;
+
+        if (isFlyingDown)
+        {
+            float forwardAmount = 1f - amount;
+            movementVector +=
+            (
+                forwardAmount * energy * transform.forward +
+                amount * loweringDownEnergy * Vector3.down 
+            ) * Time.deltaTime;
+        }
+        else
+        {
+            movementVector += energy * transform.forward * Time.deltaTime;
+        }
     }
 
     void ComputeFriction()

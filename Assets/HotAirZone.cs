@@ -6,6 +6,8 @@ using UnityEngine.Rendering;
 public interface IWindPusher
 {
     public Vector3 Force { get; }
+
+    public Vector3 Center { get; }
 }
 
 public class HotAirZone : MonoBehaviour, IWindPusher
@@ -17,6 +19,8 @@ public class HotAirZone : MonoBehaviour, IWindPusher
     private Vector3 force;
 
     public Vector3 Force => force;
+
+    public Vector3 Center => transform.position;
 
     private void Awake()
     {
